@@ -1,0 +1,9 @@
+/.local-archive/
+.DS_Store
+__pycache__/
+*.py[cod]
+*.kicad_prl
+~*.lck
+*-backups/
+/results/6v-dropout.csv
+/results/6v-regulation.csv

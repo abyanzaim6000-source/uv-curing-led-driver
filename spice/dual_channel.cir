@@ -1,0 +1,21 @@
+Dual-channel hysteretic LED buck
+.include channel.inc
+Vin vin 0 12
+Vdima dima 0 PWL(0 1 199u 1 200u 0.2 399u 0.2 400u 1)
+Vdimb dimb 0 PWL(0 1 599u 1 600u 0.2 799u 0.2 800u 1)
+Xa vin dima swa 0 LED_BUCK
+Xb vin dimb swb 0 LED_BUCK
+
+.temp 27
+.tran 100n 1m 0 50n uic
+.meas tran a_both_on AVG i(v.xa.vprobe) FROM=90u TO=190u
+.meas tran b_both_on AVG i(v.xb.vprobe) FROM=90u TO=190u
+.meas tran a_off RMS i(v.xa.vprobe) FROM=250u TO=390u
+.meas tran a_control_off MAX v(xa.control) FROM=201u TO=399u
+.meas tran b_while_a_off AVG i(v.xb.vprobe) FROM=250u TO=390u
+.meas tran b_off RMS i(v.xb.vprobe) FROM=650u TO=790u
+.meas tran b_control_off MAX v(xb.control) FROM=601u TO=799u
+.meas tran a_while_b_off AVG i(v.xa.vprobe) FROM=650u TO=790u
+.meas tran a_recovered AVG i(v.xa.vprobe) FROM=900u TO=1m
+.meas tran b_recovered AVG i(v.xb.vprobe) FROM=900u TO=1m
+.end

@@ -1,0 +1,4 @@
+(fp_lib_table
+  (version 7)
+  (lib (name "UV_RevC")(type "KiCad")(uri "${KIPRJMOD}/UV_RevC.pretty")(options "")(descr "Rev C UV driver footprints"))
+)

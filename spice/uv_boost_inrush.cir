@@ -1,0 +1,19 @@
+405 nm boost passive precharge with the eFuse output ramp prescribed
+* Boost PWM held low. This checks capacitor charging only, not eFuse dynamics
+* or startup with the TPS92691 enabled. Steep slope and high capacitance
+* represent tolerance screening rather than measured component behavior.
+.param supply=13.2 slew=1368 input_c=120u output_c=11.28u
+Befuse source 0 V=min({supply},time*{slew})
+Vmonitor source rail 0
+Rinput_esr rail precharge 60m
+Cinput precharge 0 {input_c}
+Lboost rail switch 100u
+Dboost switch output RECTIFIER
+Coutput output 0 {output_c}
+Rbleed output 0 100k
+.model RECTIFIER D(Is=1u N=1.1 Rs=0.08)
+.tran 1u 15m 0 1u
+.meas tran peak_input MAX i(Vmonitor) FROM=0 TO=15m
+.meas tran charge_complete WHEN v(rail)={supply*0.99} RISE=1
+.meas tran output_precharge FIND v(output) AT=15m
+.end

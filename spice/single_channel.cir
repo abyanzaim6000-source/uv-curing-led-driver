@@ -1,0 +1,15 @@
+Single-channel hysteretic LED buck
+.include channel.inc
+Vin vin 0 12
+Vdim dim 0 1
+Xled vin dim sw 0 LED_BUCK
+
+.temp 27
+* Initialize inductor current to zero.
+.tran 100n 1m 0 50n uic
+.meas tran startup WHEN i(v.xled.vprobe)=1.02 RISE=1
+.meas tran led_avg AVG i(v.xled.vprobe) FROM=0.5m TO=1m
+.meas tran led_min MIN i(v.xled.vprobe) FROM=0.5m TO=1m
+.meas tran led_max MAX i(v.xled.vprobe) FROM=0.5m TO=1m
+.meas tran switching_period TRIG v(sw) VAL=3 RISE=1 TD=0.5m TARG v(sw) VAL=3 RISE=2 TD=0.5m
+.end

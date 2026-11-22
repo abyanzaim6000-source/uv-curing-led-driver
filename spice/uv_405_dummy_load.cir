@@ -1,0 +1,69 @@
+405 nm switched boost with behavioral current feedback and dummy load
+* Scope: power-stage response to modeled feedback. The PWM, integrator,
+* current-limit detection, OVP and power feed are simplified, not TI models.
+.param input_v=12 dummy_v=33 cap_out=6.8u
+Vin source 0 {input_v}
+Rfeed source rail 60m
+Cin rail 0 100u
+Lboost rail coil 100u
+Rcoil coil sw 118m
+Smain sw sense gate 0 MOS_SWITCH
+Ris sense 0 0.15
+Dboost sw out RECTIFIER
+Cout out 0 {cap_out}
+Rbleed out 0 100k
+
+* A one-way voltage offset and differential resistance approximate a CV load.
+Dload out knee RECTIFIER
+Vdummy knee cv {dummy_v-0.5}
+Rdynamic cv led 1.5
+Vprobe led led_return 0
+Sload led_return 0 load_enable 0 MOS_SWITCH
+Bload_enable load_enable 0 V=V(enable)>0.5 && V(open_fault)<0.5 && V(ovp)<0.5 ? 1 : 0
+
+* Enable at 1 ms, disable at 7 ms, and re-enable at 8 ms.
+Venable enable 0 PWL(0 0 999u 0 1m 1 6.999m 1 7m 0 7.999m 0 8m 1)
+Vtarget target 0 PWL(0 0 1m 0 3m 0.6)
+Vopen open_fault 0 0
+Bmeasurement sensed_now 0 V=I(Vprobe)
+Rfilter sensed_now sensed 1k
+Cfilter sensed 0 100n
+
+* Current-error integrator with clamps and hold during DIM-off or open fault.
+* The ramp sets 200 kHz duty. The compensation is a test fixture.
+Berror current_error 0 V=V(target)-V(sensed)
+Bint 0 integrator I=V(load_enable)>0.5 && (V(integrator)>-0.3 || V(current_error)>0) && (V(integrator)<0.23 || V(current_error)<0) ? V(current_error)/2000 : 0
+Cint integrator 0 1u
+Rint integrator 0 100Meg
+Bduty duty 0 V=max(0,min(0.86,1-{input_v}/33+V(integrator)+0.12*V(current_error)))
+Vramp ramp 0 PULSE(0 1 0 4.99u 5n 5n 5u)
+Bclock clock 0 V=V(ramp)<V(duty) && V(enable)>0.5 && V(ovp)<0.5 ? 1 : 0
+
+* Latching switch-current limit for the balance of each oscillator cycle.
+Rtrip sense sensed_switch 100
+Ctrip sensed_switch 0 470p
+Btrip trip 0 V=V(sensed_switch)>0.525 && V(ramp)>0.04 ? 1 : 0
+Strip logic latch trip 0 FAST_SWITCH
+Cpk latch 0 10p
+Rpk latch 0 100Meg
+Vreset reset 0 PULSE(0 1 0 1n 1n 40n 5u)
+Sreset latch 0 reset 0 FAST_SWITCH
+Bgate gate 0 V=V(clock)>0.5 && V(latch)<0.5 ? 1 : 0
+
+Vlogic logic 0 1
+Sovp logic ovp out 0 OVP_SWITCH
+Rovp ovp 0 10k
+.model OVP_SWITCH SW(Ron=1 Roff=1Gig Vt=38.5 Vh=1)
+.model RECTIFIER D(Is=1u N=1.1 Rs=0.08 Cjo=120p)
+.model MOS_SWITCH SW(Ron=35m Roff=100Meg Vt=0.5)
+.model FAST_SWITCH SW(Ron=10 Roff=1Gig Vt=0.5)
+
+.tran 50n 13m 0 50n
+.meas tran led_steady AVG i(Vprobe) FROM=5m TO=6.9m
+.meas tran led_off RMS i(Vprobe) FROM=7.2m TO=7.9m
+.meas tran led_restarted AVG i(Vprobe) FROM=11m TO=13m
+.meas tran startup_peak MAX i(Vprobe) FROM=1m TO=4m
+.meas tran pwm_restart_peak MAX i(Vprobe) FROM=8m TO=11m
+.meas tran output_peak MAX v(out) FROM=1m TO=13m
+.meas tran input_current_peak MAX i(Lboost) FROM=1m TO=13m
+.end

@@ -1,0 +1,35 @@
+405 nm boost feed-through diagnostic, switching MOSFET disabled
+* Compare identical boost power paths with and without input interruption.
+* The protected switch is commanded open after the fault. It does not model
+* TPS26630 current limiting, detection, thermal behavior or startup timing.
+Vin input 0 12
+Vunprotected input raw 0
+Vprotected input fused_input 0
+Sdisconnect fused_input protected feed_enable 0 DISCONNECT
+Venable feed_enable 0 PWL(0 1 2.999m 1 3m 0)
+Dclamp 0 protected RECTIFIER
+
+Lunprotected raw raw_sw 100u
+Lprotected protected protected_sw 100u
+Dunprotected raw_sw raw_out RECTIFIER
+Dprotected protected_sw protected_out RECTIFIER
+Cprotected_input protected 0 100u
+Cunprotected_input raw 0 100u
+Cu raw_out 0 9.4u
+Cp protected_out 0 9.4u
+Ru raw_out 0 100k
+Rp protected_out 0 100k
+
+Vfault fault 0 PWL(0 0 1.999m 0 2m 1)
+Sunprotected raw_out 0 fault 0 FAULTLOAD
+Sprotected protected_out 0 fault 0 FAULTLOAD
+
+.model RECTIFIER D(Is=1u N=1.1 Rs=0.08)
+.model DISCONNECT SW(Ron=31m Roff=100Meg Vt=0.5)
+.model FAULTLOAD SW(Ron=2.7 Roff=100Meg Vt=0.5)
+.tran 1u 6m 0 1u
+.meas tran unprotected_fault_avg AVG i(Vunprotected) FROM=4m TO=6m
+.meas tran protected_before_open AVG i(Vprotected) FROM=2.6m TO=2.9m
+.meas tran protected_after_open AVG i(Vprotected) FROM=4m TO=6m
+.meas tran protected_rail_min MIN v(protected) FROM=3m TO=6m
+.end
